@@ -21,6 +21,15 @@ func (tr *TeamRepository) AddNewTeam(team *models.Team) error {
 	return nil
 }
 
+func (tr *TeamRepository) GetTeamsForUser(userUUID uuid.UUID) ([]models.Team, error) {
+	var teams []models.Team
+	tx := tr.db.Preload("Members").Where("owner_uuid = ?", userUUID).Find(&teams)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	return teams, nil
+}
+
 func (tr *TeamRepository) GetTeamMemberProfiles(teamUUID, userUUID uuid.UUID) ([]*models.Profile, error) {
 	var team models.Team
 	if tx := tr.db.

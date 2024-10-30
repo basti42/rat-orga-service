@@ -36,6 +36,15 @@ func (app *Application) AddNewTeam(c *gin.Context) {
 	return
 }
 
+func (app *Application) GetUserTeams(c *gin.Context) {
+	teams, err := service.NewTeamService(app.db).HandleGetUserTeams(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, teams)
+}
+
 /*
 PROFILE
 */
@@ -54,6 +63,24 @@ func (app *Application) AddNewProfile(c *gin.Context) {
 	profile.Teams = []*models.Team{team}
 	c.JSON(http.StatusOK, profile)
 	return
+}
+
+func (app *Application) GetUserProfile(c *gin.Context) {
+	profile, err := service.NewProfileService(app.db).HandleGetUserProfile(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"mesage": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, profile)
+}
+
+func (app *Application) UpdateUserProfile(c *gin.Context) {
+	profile, err := service.NewProfileService(app.db).HandleUpdateProfile(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, profile)
 }
 
 func (app *Application) GetPublicProfiles(c *gin.Context) {

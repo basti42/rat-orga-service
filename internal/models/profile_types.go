@@ -14,3 +14,10 @@ type PublicProfile struct {
 	Abbreviation string    `json:"abbreviation"`
 	AvatarURL    string    `json:"avatar_url"`
 }
+
+type ProfileUpdateRequest struct {
+	Name         string `json:"name"`
+	Abbreviation string `json:"abbreviation"`
+	Bio          string `json:"bio"`
+	Quote        string `json:"quote"`
+}

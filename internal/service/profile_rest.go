@@ -56,3 +56,37 @@ func (ps *ProfileService) HandleAddNewProfile(c *gin.Context) (models.Profile, e
 
 	return profile, nil
 }
+
+func (ps *ProfileService) HandleGetUserProfile(c *gin.Context) (*models.Profile, error) {
+	userString, ok := c.Keys["user-uuid"]
+	if !ok {
+		return nil, errors.New("no user found in context from token validation")
+	}
+	userUUID, err := uuid.Parse(fmt.Sprintf("%v", userString))
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("malformatted user uuid found in token: %v", userString))
+	}
+	return ps.profileRepo.GetProfileForUser(userUUID)
+}
+
+func (ps *ProfileService) HandleUpdateProfile(c *gin.Context) (*models.Profile, error) {
+	userString, ok := c.Keys["user-uuid"]
+	if !ok {
+		return nil, errors.New("no user found in context from token validation")
+	}
+	userUUID, err := uuid.Parse(fmt.Sprintf("%v", userString))
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("malformatted user uuid found in token: %v", userString))
+	}
+	profileString := c.Param("profile-uuid")
+	profileUUID, err := uuid.Parse(profileString)
+	if err != nil {
+		return nil, errors.New(fmt.Sprint("malformatted profile uuid. gotten: %v", profileString))
+	}
+
+	var profileUpdate models.ProfileUpdateRequest
+	if err := c.BindJSON(&profileUpdate); err != nil {
+		return nil, errors.New(fmt.Sprintf("error unpacking update request: %v", err))
+	}
+	return ps.profileRepo.UpdateProfile(profileUUID, userUUID, profileUpdate)
+}

@@ -30,11 +30,14 @@ func main() {
 	teamGroup := router.Group("/rat/teams")
 	teamGroup.Use(middlewares.UserValidationMiddleware())
 	teamGroup.POST("", app.AddNewTeam)
+	teamGroup.GET("", app.GetUserTeams)
 	teamGroup.GET("/:team-uuid/public-profiles", app.GetPublicProfiles)
 
 	profileGroup := router.Group("/rat/profiles")
 	profileGroup.Use(middlewares.UserValidationMiddleware())
 	profileGroup.POST("", app.AddNewProfile)
+	profileGroup.GET("", app.GetUserProfile)
+	profileGroup.PUT("/:profile-uuid", app.UpdateUserProfile)
 
 	sprintGroup := router.Group("/rat/sprints")
 	sprintGroup.Use(middlewares.UserValidationMiddleware())

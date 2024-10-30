@@ -49,6 +49,19 @@ func (ts *TeamService) HandleAddNewTeam(c *gin.Context) (models.Team, error) {
 	return models.Team{}, nil
 }
 
+func (ts *TeamService) HandleGetUserTeams(c *gin.Context) ([]models.Team, error) {
+	userString, ok := c.Keys["user-uuid"].(string)
+	if !ok {
+		return nil, errors.New("no user found in context from token verification")
+	}
+	userUUID, err := uuid.Parse(userString)
+	if err != nil {
+		return nil, errors.New("malformated user uuid from token")
+	}
+	return ts.repo.GetTeamsForUser(userUUID)
+
+}
+
 func (ts *TeamService) HandleGetPublicProfiles(c *gin.Context) ([]models.PublicProfile, error) {
 	userString, ok := c.Keys["user-uuid"].(string)
 	if !ok {

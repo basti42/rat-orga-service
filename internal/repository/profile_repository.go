@@ -28,3 +28,18 @@ func (pr *ProfileRepository) GetProfileForUser(userUUID uuid.UUID) (*models.Prof
 	}
 	return &profile, nil
 }
+
+func (pr *ProfileRepository) UpdateProfile(profileUUID, userUUID uuid.UUID, updates models.ProfileUpdateRequest) (*models.Profile, error) {
+	profile, err := pr.GetProfileForUser(userUUID)
+	if err != nil {
+		return nil, err
+	}
+	profile.Name = updates.Name
+	profile.Abbreviation = updates.Abbreviation
+	profile.Bio = updates.Bio
+	profile.Quote = updates.Quote
+	if tx := pr.db.Save(profile); tx.Error != nil {
+		return nil, tx.Error
+	}
+	return profile, nil
+}
