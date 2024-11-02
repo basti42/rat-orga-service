@@ -44,9 +44,32 @@ func (ts *TeamService) HandleCreateDefaultTeam(c *gin.Context) (*models.Team, er
 	return &defaultTeam, nil
 }
 
-func (ts *TeamService) HandleAddNewTeam(c *gin.Context) (models.Team, error) {
+func (ts *TeamService) HandleAddNewTeam(c *gin.Context) (*models.Team, error) {
+	userString, ok := c.Keys["user-uuid"].(string)
+	if !ok {
+		return nil, errors.New("no user found in context from token verification")
+	}
+	userUUID, err := uuid.Parse(userString)
+	if err != nil {
+		return nil, errors.New("malformated user uuid from token")
+	}
+	var newTeamRequest models.NewTeamRequest
+	if err := c.BindJSON(&newTeamRequest); err != nil {
+		return nil, errors.New("error binding new team request")
+	}
 
-	return models.Team{}, nil
+	teamUUID, _ := uuid.NewRandom()
+	newTeam := models.Team{
+		UUID:         teamUUID,
+		OwnerUUID:    userUUID,
+		Name:         newTeamRequest.Name,
+		Abbreviation: newTeamRequest.Abbreviation,
+	}
+
+	if err = ts.repo.AddNewTeam(&newTeam); err != nil {
+		return nil, err
+	}
+	return &newTeam, nil
 }
 
 func (ts *TeamService) HandleGetUserTeams(c *gin.Context) ([]models.Team, error) {

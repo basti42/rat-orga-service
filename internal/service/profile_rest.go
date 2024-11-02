@@ -81,7 +81,7 @@ func (ps *ProfileService) HandleUpdateProfile(c *gin.Context) (*models.Profile, 
 	profileString := c.Param("profile-uuid")
 	profileUUID, err := uuid.Parse(profileString)
 	if err != nil {
-		return nil, errors.New(fmt.Sprint("malformatted profile uuid. gotten: %v", profileString))
+		return nil, errors.New(fmt.Sprintf("malformatted profile uuid. gotten: %v", profileString))
 	}
 
 	var profileUpdate models.ProfileUpdateRequest
