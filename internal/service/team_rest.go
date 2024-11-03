@@ -82,7 +82,6 @@ func (ts *TeamService) HandleGetUserTeams(c *gin.Context) ([]models.Team, error)
 		return nil, errors.New("malformated user uuid from token")
 	}
 	return ts.repo.GetTeamsForUser(userUUID)
-
 }
 
 func (ts *TeamService) HandleGetPublicProfiles(c *gin.Context) ([]models.PublicProfile, error) {
