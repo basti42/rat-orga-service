@@ -21,22 +21,58 @@ func (tr *TeamRepository) AddNewTeam(team *models.Team) error {
 	return nil
 }
 
-func (tr *TeamRepository) GetTeamsForUser(userUUID uuid.UUID) ([]models.Team, error) {
+func (tr *TeamRepository) AddNewTeamMember(member *models.TeamMember) error {
+	if tx := tr.db.Create(member); tx.Error != nil {
+		return tx.Error
+	}
+	return nil
+}
+
+func (tr *TeamRepository) GetTeamsForUser(userUUID uuid.UUID) ([]models.TeamAPI, error) {
+
+	// 1. find all teams for that user, should be only one in the beginning
 	var teams []models.Team
-	tx := tr.db.Preload("Members").Where("owner_uuid = ?", userUUID).Find(&teams)
+	tx := tr.db.Where("owner_uuid = ?", userUUID).Find(&teams)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
-	return teams, nil
+
+	// 2. iterate all found teams to retrieve their members and prepare the output api type
+	teamsAPI := make([]models.TeamAPI, len(teams))
+	for i, team := range teams {
+
+		var members []models.TeamMember
+		if tx := tr.db.Where("team_uuid = ?", team.UUID).Find(&members); tx.Error != nil {
+			return nil, tx.Error
+		}
+
+		membersAPI := make([]models.TeamMemberAPI, len(members))
+		for m, member := range members {
+			membersAPI[m] = models.TeamMemberAPI{
+				TeamUUID: member.TeamUUID,
+				UserUUID: member.UserUUID,
+				Role:     member.Role,
+			}
+		}
+
+		teamsAPI[i] = models.TeamAPI{
+			UUID:         team.UUID,
+			OwnerUUID:    team.OwnerUUID,
+			Name:         team.Name,
+			Abbreviation: team.Abbreviation,
+			Description:  team.Description,
+			Members:      membersAPI,
+		}
+	}
+	return teamsAPI, nil
 }
 
-func (tr *TeamRepository) GetTeamMemberProfiles(teamUUID, userUUID uuid.UUID) ([]*models.Profile, error) {
-	var team models.Team
+func (tr *TeamRepository) GetTeamMembers(teamUUID uuid.UUID) ([]*models.TeamMember, error) {
+	var members []*models.TeamMember
 	if tx := tr.db.
-		Preload("Members").
-		Where("uuid = ? AND owner_uuid = ?", teamUUID, userUUID).
-		First(&team); tx.Error != nil {
+		Where("team_uuid = ?", teamUUID).
+		First(&members); tx.Error != nil {
 		return nil, tx.Error
 	}
-	return team.Members, nil
+	return members, nil
 }

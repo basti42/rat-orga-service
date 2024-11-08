@@ -90,3 +90,26 @@ func (ps *ProfileService) HandleUpdateProfile(c *gin.Context) (*models.Profile, 
 	}
 	return ps.profileRepo.UpdateProfile(profileUUID, userUUID, profileUpdate)
 }
+
+func (ps *ProfileService) HandleGetPublicProfiles(c *gin.Context) ([]models.PublicProfile, error) {
+	// no user-validation required, as it already happend in the team members call
+	// only "team_member_uuids" required from context
+
+	memberUUIDS := c.Keys["team_member_uuids"].([]uuid.UUID)
+
+	profiles, err := ps.profileRepo.GetProfiles(memberUUIDS)
+	if err != nil {
+		return nil, err
+	}
+
+	publicProfiles := make([]models.PublicProfile, len(profiles))
+	for i, profile := range profiles {
+		publicProfiles[i] = models.PublicProfile{
+			UserUUID:     profile.UserUUID,
+			Name:         profile.Name,
+			Abbreviation: profile.Abbreviation,
+			AvatarURL:    profile.AvatarURL,
+		}
+	}
+	return publicProfiles, nil
+}

@@ -4,17 +4,27 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type Team struct {
-	UUID         uuid.UUID  `gorm:"primaryKey" json:"uuid"`
-	OwnerUUID    uuid.UUID  `json:"owner_uuid"`
-	Abbreviation string     `json:"abbreviation"`
-	Name         string     `json:"name"`
-	Members      []*Profile `gorm:"many2many:teams_profiles" json:"members"`
+	UUID         uuid.UUID `gorm:"primaryKey" json:"uuid"`
+	OwnerUUID    uuid.UUID `json:"owner_uuid"`
+	Abbreviation string    `json:"abbreviation"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
 }
 
 func (Team) TableName() string { return "teams" }
+
+type TeamMember struct {
+	gorm.Model
+	TeamUUID uuid.UUID `json:"team_uuid"`
+	UserUUID uuid.UUID `json:"user_uuid"`
+	Role     string    `json:"role"`
+}
+
+func (TeamMember) TableName() string { return "team_members" }
 
 type Profile struct {
 	UUID         uuid.UUID `gorm:"primaryKey" json:"uuid"`
@@ -27,7 +37,6 @@ type Profile struct {
 	Role         string    `json:"role"`
 	Bio          string    `json:"bio"`
 	Quote        string    `json:"quote"`
-	Teams        []*Team   `gorm:"many2many:teams_profiles" json:"teams"`
 }
 
 func (Profile) TableName() string { return "profiles" }

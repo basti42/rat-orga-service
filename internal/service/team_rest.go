@@ -36,7 +36,6 @@ func (ts *TeamService) HandleCreateDefaultTeam(c *gin.Context) (*models.Team, er
 		OwnerUUID:    userUUID,
 		Abbreviation: strings.ToUpper(fmt.Sprintf("%v", profile.Name[0])) + "AT",
 		Name:         fmt.Sprintf("%v's Team", profile.Name),
-		Members:      []*models.Profile{&profile},
 	}
 	if err := ts.repo.AddNewTeam(&defaultTeam); err != nil {
 		return nil, err
@@ -72,7 +71,7 @@ func (ts *TeamService) HandleAddNewTeam(c *gin.Context) (*models.Team, error) {
 	return &newTeam, nil
 }
 
-func (ts *TeamService) HandleGetUserTeams(c *gin.Context) ([]models.Team, error) {
+func (ts *TeamService) HandleGetUserTeams(c *gin.Context) ([]models.TeamAPI, error) {
 	userString, ok := c.Keys["user-uuid"].(string)
 	if !ok {
 		return nil, errors.New("no user found in context from token verification")
@@ -84,7 +83,7 @@ func (ts *TeamService) HandleGetUserTeams(c *gin.Context) ([]models.Team, error)
 	return ts.repo.GetTeamsForUser(userUUID)
 }
 
-func (ts *TeamService) HandleGetPublicProfiles(c *gin.Context) ([]models.PublicProfile, error) {
+func (ts *TeamService) HandleGetTeamMembers(c *gin.Context) ([]*models.TeamMember, error) {
 	userString, ok := c.Keys["user-uuid"].(string)
 	if !ok {
 		return nil, errors.New("no user found in context from token verification")
@@ -100,21 +99,24 @@ func (ts *TeamService) HandleGetPublicProfiles(c *gin.Context) ([]models.PublicP
 		return nil, errors.New("malformatted team uuid in path")
 	}
 
-	profiles, err := ts.repo.GetTeamMemberProfiles(teamUUID, userUUID)
+	teamMembers, err := ts.repo.GetTeamMembers(teamUUID)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("error fetching mambers for team: %v", err))
+		return nil, errors.New(fmt.Sprintf("error fetching team members for team: %v", err))
 	}
 
-	// convert to PublicProfile
-	publicProfiles := make([]models.PublicProfile, len(profiles))
-	for i, profile := range profiles {
-		publicProfiles[i] = models.PublicProfile{
-			UserUUID:     profile.UUID,
-			Name:         profile.Name,
-			Abbreviation: profile.Abbreviation,
-			AvatarURL:    profile.AvatarURL,
+	// check if user is in the team members for this team, else do not return
+	requestingUserIsTeamMember := false
+	for _, teamMember := range teamMembers {
+		if teamMember.UserUUID == userUUID {
+			requestingUserIsTeamMember = true
+			break
 		}
 	}
 
-	return publicProfiles, nil
+	if !requestingUserIsTeamMember {
+		msg := fmt.Sprintf("user=%v is not a member of team=%v", userUUID, teamUUID)
+		return nil, errors.New(msg)
+	}
+
+	return teamMembers, nil
 }

@@ -43,3 +43,14 @@ func (pr *ProfileRepository) UpdateProfile(profileUUID, userUUID uuid.UUID, upda
 	}
 	return profile, nil
 }
+
+func (pr *ProfileRepository) GetProfiles(userUUIDs []uuid.UUID) ([]models.Profile, error) {
+	var profiles []models.Profile
+	if tx := pr.db.
+		Model(&models.Profile{}).
+		Where("user_uuid IN ?", userUUIDs).
+		Find(&profiles); tx.Error != nil {
+		return nil, tx.Error
+	}
+	return profiles, nil
+}
