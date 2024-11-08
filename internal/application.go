@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/basti42/orga-service/internal/models"
 	"github.com/basti42/orga-service/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -103,7 +104,18 @@ func (app *Application) GetPublicProfiles(c *gin.Context) {
 		return
 	}
 
-	// 3. if all ok return the found public user profiles
+	// 3. role is team specific set it to the profile information
+	// map [userUUID] -> teamMember
+	members := make(map[uuid.UUID]models.TeamMember, len(teamMembers))
+	for _, tm := range teamMembers {
+		members[tm.UserUUID] = *tm
+	}
+
+	for i, profile := range publicProfiles {
+		publicProfiles[i].Role = members[profile.UserUUID].Role
+	}
+
+	// 4. if all ok return the found public user profiles
 	c.JSON(http.StatusOK, publicProfiles)
 }
 

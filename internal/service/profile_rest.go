@@ -109,6 +109,7 @@ func (ps *ProfileService) HandleGetPublicProfiles(c *gin.Context) ([]models.Publ
 			Name:         profile.Name,
 			Abbreviation: profile.Abbreviation,
 			AvatarURL:    profile.AvatarURL,
+			Role:         "",
 		}
 	}
 	return publicProfiles, nil
